@@ -1,0 +1,8 @@
+add_executable(client client.cpp)
+add_executable(server server.cpp)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+find_package(Threads)
+message(STATUS "CMAKE_THREAD_LIBS_INIT is ${CMAKE_THREAD_LIBS_INIT}")
+target_link_libraries(server ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(client dynamic_bylSocket)
+target_link_libraries(server dynamic_bylSocket)
