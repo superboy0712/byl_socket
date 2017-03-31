@@ -6,17 +6,20 @@
  */
 
 
-#include "../src/bylSocket.hpp"
+#include "../src/tmpl_socket.h"
 #include <iostream>
-#include <unistd.h>
+using bylSocket::Domain;
+using bylSocket::Type;
+using bylSocket::Options;
+using bylSocket::tryForMaxInterval;
+using bylSocket::Tmpl::BufferedSocket;
 using namespace std;
-using namespace bylSocket;
 
 int main() {
     using namespace bylSocket;
     cout << "hello iam client" << endl;
     try {
-        BufferedSocket s(Domain::IP4, Type::STREAM);
+        BufferedSocket<Domain::IP4, Type::STREAM> s;
         s.set_opt(Options::SNDTIMEO, 1);
         s.set_opt(Options::RCVTIMEO, 1);
         s.set_opt(Options::REUSEADDR);

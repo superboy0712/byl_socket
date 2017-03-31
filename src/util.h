@@ -11,6 +11,8 @@
 #include <thread>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
+#include <assert.h>
 
 namespace bylSocket {
 
@@ -28,8 +30,6 @@ namespace bylSocket {
 #define assert_n_throw(expr) \
     do { if(!(expr)) err_report_and_throw(#expr); } while(0)
 
-#define assert_n_return(expr) \
-    do { if(!(expr)) {err_report(#expr); return;}} while(0)
 
 /**
  * try at most n times for a timeout blocking call

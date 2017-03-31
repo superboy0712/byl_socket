@@ -1,17 +1,15 @@
-/*
- * bylSocket.hpp
- *
- *  Created on: Feb 22, 2017
- *      Author: yulong
- */
+//
+// Created by yulong on 3/31/17.
+//
 
-#ifndef __BYLSOCKET_HPP__
-#define __BYLSOCKET_HPP__
-
+#ifndef BYLSOCKET_TMPL_SOCKET_H
+#define BYLSOCKET_TMPL_SOCKET_H
 #include "common.h"
 
 namespace bylSocket {
+namespace Tmpl {
 
+//! template style alternative for Socket
 /**
  * A socket has two ends : src/local and dest/remote
  *
@@ -49,44 +47,44 @@ namespace bylSocket {
  *      be executed properly and thus remained)
  *
  */
+template<Domain D, Type T>
 class Socket {
 public:
-    Socket(Domain d, Type t);
+    Socket();
     void bind(const char *local, const char *port = "\0");
     void connect(const char *remote, const char *port = "\0");
     void listen(int backlog);
     Socket accept();
+    void set_opt(Options o, time_t sec = 0, long int nsec = 0);
 
     Socket(const Socket &) = default;
     Socket(Socket &&) = default;
     Socket &operator=(const Socket &) = default;
     Socket &operator=(Socket &&) = default;
-
     virtual ~Socket() {}
-
-    void set_opt(Options o, time_t sec = 0, long int nsec = 0);
 protected:
-    Socket(int fd, Domain d, Type t, Status ss);
+    Socket(int fd, Status ss);
     std::shared_ptr<int> m_pfd;
-    Domain               m_domain;
-    Type                 m_type;
-    Status               m_status;
-
+    Status m_status;
 };
 
-/**
- * @brief buffered Socket with send/recv methods
- */
-class BufferedSocket : public bylSocket::Socket {
+template<Domain D, Type T>
+class BufferedSocket : public Socket<D, T> {
 public:
+    BufferedSocket() : Socket<D, T>() {}
+    BufferedSocket(const Socket<D, T> &o) : Socket<D, T>(o) {}
+    BufferedSocket(Socket<D, T> &&o) : Socket<D, T>(std::move(o)) {}
+    BufferedSocket(const BufferedSocket &o) : Socket<D, T>(o) {}
+    BufferedSocket(BufferedSocket &&o) : Socket<D, T>(std::move(o)) {}
+    BufferedSocket &operator=(const BufferedSocket &o) {
+        Socket<D, T>::operator=(o);
+        return *this;
+    }
+    BufferedSocket &operator=(BufferedSocket &&o) {
+        Socket<D, T>::operator=(std::move(o));
+        return *this;
+    }
 
-    BufferedSocket(Domain d, Type t);
-    BufferedSocket(const Socket &o);
-    BufferedSocket(Socket &&o);
-    BufferedSocket(const BufferedSocket &o);
-    BufferedSocket &operator=(const BufferedSocket &o);
-    BufferedSocket(BufferedSocket &&o);
-    BufferedSocket &operator=(BufferedSocket &&o);
     virtual ~BufferedSocket() {}
 
     void fsend(const char *format, ...);
@@ -98,21 +96,30 @@ protected:
     char m_buff[BUFSZ];
 };
 
-/**
- * Convenient Listened Socket wrapper
- */
-class ListenedSocket : public Socket {
+template<Domain D>
+class ListenedSocket { static_assert(true, "Not valid template resolution"); };
+
+template<>
+class ListenedSocket<Domain::IP4> : public Socket<Domain::IP4, Type::STREAM> {
 public:
-    explicit ListenedSocket(Domain d = Domain::IP4,
-                            const char *port = "50000",
+    explicit ListenedSocket(const char *port = "50000",
                             const char *local = "127.0.0.1",
                             int backlog = 50);
 
-    //! Convenient constructor for Unix Domain Socket
+};
+template<>
+class ListenedSocket<Domain::IP6> : public Socket<Domain::IP6, Type::STREAM> {
+public:
+    explicit ListenedSocket(const char *port = "50000",
+                            const char *local = "::1",
+                            int backlog = 50);
+};
+template<>
+class ListenedSocket<Domain::UNIX> : public Socket<Domain::UNIX, Type::STREAM> {
+public:
     explicit ListenedSocket(const char *local, int backlog = 50);
 };
 
-}// bylSocket
-
-
-#endif /* BYLSOCKET_HPP_ */
+}
+}
+#endif //BYLSOCKET_TMPL_SOCKET_H
